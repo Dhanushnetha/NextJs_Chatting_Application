@@ -28,7 +28,7 @@ const Input: React.FC<InputProps> = ({
             {label}
         </label>
         <div className="mt-2">
-            <input type={type} id={id} autoComplete={id} disabled={disabled} {...register(id, {required})} className={clsx(`
+            <input type={type} id={id} autoComplete={id}  required={required} disabled={disabled} {...register(id, {required})} className={clsx(`
             form-input
             block
             w-full
