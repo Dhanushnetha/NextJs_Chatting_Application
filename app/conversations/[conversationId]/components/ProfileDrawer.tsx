@@ -1,7 +1,8 @@
 'use client';
 
 import Avatar from "@/app/components/Avatar";
-import Modal from "@/app/components/Modal";
+import AvatarGroup from "@/app/components/AvatarGroup";
+import ConfirmModal from "@/app/components/ConfirmModal";
 import useOtherUser from "@/app/hooks/useOtherUser";
 import { Dialog, Transition } from "@headlessui/react";
 import { Conversation, User } from "@prisma/client";
@@ -19,7 +20,7 @@ interface ProfileDrawerProps {
 
 const ProfileDrawer:React.FC<ProfileDrawerProps> = ({isOpen, onClose, data}) => {
     const otherUser = useOtherUser(data);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
     
     const joinedDate = useMemo(()=>{
         return format(new Date(otherUser.createdAt), 'PP');
@@ -39,11 +40,11 @@ const ProfileDrawer:React.FC<ProfileDrawerProps> = ({isOpen, onClose, data}) => 
 
   return (
     <>
-    <Modal isOpen={isModalOpen} onClose={()=>setIsModalOpen(false)}>
-        <div className="bg-white p-5">
+    <ConfirmModal isOpen={confirmOpen} onClose={()=>setConfirmOpen(false)} />
+        {/* <div className="bg-white p-5">
             <p>Hello Modal!</p>
         </div>
-    </Modal>
+    </ConfirmModal> */}
         <Transition.Root show={isOpen} as={Fragment}>
             <Dialog as="div" className='relative z-50' onClose={onClose}>
                 <Transition.Child as={Fragment} enter="ease-out duration-500" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-500" leaveFrom="opacity-100" leaveTo="opacity-0">
@@ -68,7 +69,11 @@ const ProfileDrawer:React.FC<ProfileDrawerProps> = ({isOpen, onClose, data}) => 
                                         <div className="relative mt-6 flex-1 px-4 sm:px-6">
                                             <div className="flex flex-col items-center">
                                                 <div className="mb-2">
-                                                    <Avatar user={otherUser} />
+                                                    {data.isGroup ? (
+                                                        <AvatarGroup users={data.users} />
+                                                    ):(
+                                                        <Avatar user={otherUser} />
+                                                    )}
                                                 </div>
                                                 <div className="">
                                                     {title}
@@ -77,7 +82,7 @@ const ProfileDrawer:React.FC<ProfileDrawerProps> = ({isOpen, onClose, data}) => 
                                                     {statusText}
                                                 </div>
                                                 <div className="flex gap-10 my-8">
-                                                    <div className="flex flex-col gap-3 items-center cursor-pointer hover:opacity-75" onClick={()=> setIsModalOpen(true)}>
+                                                    <div className="flex flex-col gap-3 items-center cursor-pointer hover:opacity-75" onClick={()=> setConfirmOpen(true)}>
                                                         <div className="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center">
                                                             <IoTrash size={20}/>
                                                         </div>
@@ -88,6 +93,16 @@ const ProfileDrawer:React.FC<ProfileDrawerProps> = ({isOpen, onClose, data}) => 
                                                 </div>
                                                 <div className="w-full pb-5 pt-5 sm:px-0 sm:pt-0">
                                                     <dl className="space-y-8 px-4 sm:space-y-6 sm:px-6">
+                                                        {data.isGroup && (
+                                                            <div>
+                                                                <dt className="text-sm font-medium text-gray-500 sm:w-40 sm:flex-shrink-0">
+                                                                    Emails
+                                                                </dt>
+                                                                <dd className="mt-1 text-sm text-gray-900 sm:col-span-2">
+                                                                    {data.users.map((user)=> user.email).join(', ')}
+                                                                </dd>
+                                                            </div>
+                                                        )}
                                                         {!data.isGroup && (
                                                             <div>
                                                                 <dt className="text-sm font-medium text-gray-500 sm:w-40 sm:flex-shrink-0">Email</dt>
