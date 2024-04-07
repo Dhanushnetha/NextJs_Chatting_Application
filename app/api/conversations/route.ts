@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/app/actions/getCurrentUser";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from '@/app/libs/prismadb'
+import { pusherServer } from "@/app/libs/pusher";
 
 export async function POST(req: Request){
     try {
@@ -20,6 +21,27 @@ export async function POST(req: Request){
         }
 
         if(isGroup){
+
+			const Ids = members.map((user: {value: string})=> user.value);
+			Ids.push(currentUser.id);
+
+            const checkExsistingGroupConverstion = await prisma.conversation.findMany({
+                where:{
+                    // AND: Ids.map((userId: any) => ({userIds: {hasEvery: userId}}))
+					userIds: {
+						hasEvery: Ids,
+					}
+                }
+            })
+
+			const filteredConversations = checkExsistingGroupConverstion.filter(conversation => 
+				conversation.userIds.every(userId => Ids.includes(userId))
+			);
+            
+            if(filteredConversations.length > 0){
+				return NextResponse.json({conversation: filteredConversations[0], message: 'Group already exists!!' });
+			}
+
             const newConversation = await prisma.conversation.create({
                 data:{
                     name, isGroup, users:{
@@ -38,7 +60,12 @@ export async function POST(req: Request){
                 }
             })
 
-            return NextResponse.json(newConversation);
+            newConversation.users.forEach((user)=>{
+                if(user.email){
+                    pusherServer.trigger(user.email, 'conversation:new', newConversation);
+                }
+            })
+            return NextResponse.json({conversation: newConversation, message: 'Group created!!' });
         }
 
         const exsistingConversations = await prisma.conversation.findMany({
@@ -79,6 +106,12 @@ export async function POST(req: Request){
             },
             include:{
                 users: true
+            }
+        })
+
+        newconversation.users.map((user)=>{
+            if(user.email){
+                pusherServer.trigger(user.email, 'conversation:new', newconversation);
             }
         })
 

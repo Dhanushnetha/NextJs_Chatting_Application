@@ -34,7 +34,11 @@ const GroupChatModal:React.FC<GroupChatModalProps> = ({isOpen, onClose, users}) 
         axios.post('/api/conversations', {
             ...data,
             isGroup: true
-        }).then(()=>{
+        }).then((data)=>{
+            if(data?.data?.message){
+                toast.success(`${data?.data?.message}`)
+            }
+            router.push(`/conversations/${data.data.conversation.id}`);
             router.refresh();
             onClose();
         }).catch(()=> toast.error('Something went wrong!!!'))
