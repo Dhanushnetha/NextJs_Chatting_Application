@@ -42,15 +42,19 @@ const ConversationList: React.FC<ConversationListProps> = ({initialItems, users}
 
     const updateHandler = (conversation: FullConversationType)=>{
       setItems((current)=>{
-        return current.map((currentConversation)=>{
+        const newObj = current.map((currentConversation)=>{
           if(currentConversation.id === conversation.id){
             return {
               ...currentConversation,
+              lastMessageAt: new Date(),
               messages: conversation.messages
+              
             }
           }
           return currentConversation;
-        })
+        });
+
+        return newObj.sort((a, b)=> b.lastMessageAt.getTime() - a.lastMessageAt.getTime())
       })
     }
     const newHandler = (conversation: FullConversationType)=> {
@@ -71,14 +75,30 @@ const ConversationList: React.FC<ConversationListProps> = ({initialItems, users}
       }
     }
 
+    const updateSeenHandler = (conversation: FullConversationType)=>{
+      setItems((current)=>{
+        return current.map((currentConversation)=>{
+          if(currentConversation.id === conversation.id){
+            return {
+              ...currentConversation,
+              messages: conversation.messages
+            }
+          }
+          return currentConversation;
+        });
+      })
+    }
+
     pusherClient.bind('conversation:new', newHandler);
     pusherClient.bind('conversation:update', updateHandler);
+    pusherClient.bind('conversation:update:seen', updateSeenHandler);
     pusherClient.bind('conversation:remove', removeHandler);
 
     return ()=>{
       pusherClient.unsubscribe(pusherKey);
       pusherClient.unbind('conversation:new', newHandler);
       pusherClient.unbind('conversation:update', updateHandler);
+      pusherClient.unbind('conversation:update:seen', updateHandler);
       pusherClient.unbind('conversation:remove', removeHandler);
     }
   },[pusherKey, conversationId, router]);
