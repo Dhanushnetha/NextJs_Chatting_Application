@@ -40,13 +40,13 @@ const ConversationList: React.FC<ConversationListProps> = ({initialItems, users}
 
     pusherClient.subscribe(pusherKey);
 
-    const updateHandler = (conversation: FullConversationType)=>{
+    const updateHandler = (conversation: any)=>{
       setItems((current)=>{
         const newObj = current.map((currentConversation)=>{
           if(currentConversation.id === conversation.id){
             return {
               ...currentConversation,
-              lastMessageAt: new Date(),
+              lastMessageAt: new Date(conversation.lastMessage),
               messages: conversation.messages
               
             }
